@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -42,11 +43,14 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	// glog.Infoln(r.Method)
 	glog.Infoln(ReadUserIP(r))
 	glog.Infoln(strings.Split(ReadUserIP(r), ":")[0])
+
+	io.WriteString(w, fmt.Sprintf("hello version is: %s\n", VERSION))
 }
 
 // 4. return 200 for path /healthz
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
+	io.WriteString(w, "healthz\n")
 }
 
 func ReadUserIP(r *http.Request) string {

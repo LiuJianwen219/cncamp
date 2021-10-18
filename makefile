@@ -1,4 +1,4 @@
-export tag=v1.0
+export tag=v1.0.0
 
 root:
 	export ROOT=github.com/LiuJianwen/cncamp
@@ -10,8 +10,8 @@ build:
 
 release: build
 	echo "build httpserver container"
-	docker build -t wxwd14388/httpserver:${tag}
+	sudo docker build -t wxwd14388/httpserver:${tag} .
 
 push: release
 	echo "push wxwd14388/httpserver"
-	docker push wxwd14388/httpserver:${tag}
+	sudo docker push wxwd14388/httpserver:${tag}

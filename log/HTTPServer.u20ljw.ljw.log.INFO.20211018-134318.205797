@@ -1,0 +1,10 @@
+Log file created at: 2021/10/18 13:43:18
+Running on machine: u20ljw
+Binary: Built with gc go1.16.8 for linux/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1018 13:43:18.711374  205797 main.go:40] map[Accept:[*/*] User-Agent:[curl/7.68.0] Version:[ljwv1.0.0]]
+I1018 13:43:18.711549  205797 main.go:44] 127.0.0.1:57598
+I1018 13:43:18.711552  205797 main.go:45] 127.0.0.1
+I1018 13:43:29.049590  205797 main.go:40] map[Accept:[*/*] User-Agent:[curl/7.68.0] Version:[ljwv1.0.0]]
+I1018 13:43:29.049636  205797 main.go:44] 127.0.0.1:57602
+I1018 13:43:29.049638  205797 main.go:45] 127.0.0.1
