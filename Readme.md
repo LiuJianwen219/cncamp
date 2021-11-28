@@ -13,3 +13,5 @@
 ## 1128 module 8 homework
 
 1. create Deployment.yaml for normal deploy
+2. add livenessProbe and some test
+3. add postStart and preStop

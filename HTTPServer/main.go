@@ -4,21 +4,27 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
 )
 
 func main() {
+	// some virtual init task
+	myInitial() // 2. will always be killed for 20s is over initialDelaySeconds=10, but used in /preStart
+
 	//
 	// please run with cmd: ./bin/amd64/HTTPServer -logtostderr=true
 	//
 	flag.Parse()
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/healthz", healthzHandler)
+	http.HandleFunc("/preStop", preStopHandler)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
@@ -26,20 +32,17 @@ func main() {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. wirte request Headers to response's Header
 	for k, v := range r.Header {
 		for _, sv := range v {
 			w.Header().Add(k, sv)
 		}
 	}
 
-	// 2. set environment parameter to response's Header
 	VERSION := os.Getenv("VERSION")
 	w.Header().Add("VERSION", VERSION)
 	fmt.Println(VERSION)
 	glog.Infoln(w.Header())
 
-	// 3. get IP from request
 	// glog.Infoln(r.Method)
 	glog.Infoln(ReadUserIP(r))
 	glog.Infoln(strings.Split(ReadUserIP(r), ":")[0])
@@ -47,10 +50,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintf("hello version is: %s\n", VERSION))
 }
 
-// 4. return 200 for path /healthz
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	io.WriteString(w, "healthz\n")
+	user := r.Header.Get("user")
+	fmt.Println("healthz", user, time.Now()) // see log from 'kubectl logs'
 }
 
 func ReadUserIP(r *http.Request) string {
@@ -62,4 +66,33 @@ func ReadUserIP(r *http.Request) string {
 		IPAddress = r.RemoteAddr
 	}
 	return IPAddress
+}
+
+func myInitial() {
+	fmt.Println("init start", time.Now())
+	time.Sleep(time.Duration(5) * time.Second)
+	// time.Sleep(time.Duration(20) * time.Second) // 2. will always be killed for 20s is over initialDelaySeconds=10
+	fmt.Println("init over", time.Now())
+
+	err := ioutil.WriteFile("/tmp/healthy", []byte("I can read now."), 0755)
+	if err != nil {
+		fmt.Printf("Unable to write file: %v\n", err)
+	}
+}
+
+// 3. pre stop, /data is a hostpath volume for check
+func preStopHandler(w http.ResponseWriter, r *http.Request) {
+	f, err := os.OpenFile("/data/data.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	defer f.Close()
+	if err != nil {
+		fmt.Printf("file open error: %v\n", err)
+	}
+
+	if _, err = f.WriteString("preStop: good night! " + time.Now().String() + "\n"); err != nil {
+		fmt.Printf("file write error: %v\n", err)
+	}
+
+	w.WriteHeader(200)
+	io.WriteString(w, "preStop\n")
+	fmt.Println("preStop: good night!", time.Now()) // see log from 'kubectl logs'
 }
