@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: deployment
+metadata:
+  name: httpServer-deployment
+  labels:
+    app: httpServer
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: httpServer
+    spec:
+      containers:
+        - name: http-server
+          image: wxwd14388/httpserver:v1.0.0
+          ports:
+          - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              httpHeaders:
+              - name: user
+                value: cluster-livenessProbe
+            initialDelaySeconds: 5
+            periodSeconds: 3

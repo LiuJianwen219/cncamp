@@ -9,3 +9,7 @@
 7. docker tag httpserver:v1.0.0 wxwd14388/httpserver:v1.0.0 (sudo make release)
 8. docker login
 9. docker push wxwd14388/httpserver:v1.0.0 (sudo make push)
+
+## 1128 module 8 homework
+
+1. create Deployment.yaml for normal deploy
