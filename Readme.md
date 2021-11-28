@@ -15,3 +15,6 @@
 1. create Deployment.yaml for normal deploy
 2. add livenessProbe and some test
 3. add postStart and preStop
+4. add config.ini from volume and get from /getData
+5. add service through ClusterIP(curl 10.104.5.137:9876/getData) and NodePort(curl localhost:30080/getData)
+6. ingress not success, try later

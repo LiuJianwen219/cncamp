@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  namespace: default
+  name: test-ingress
+spec:
+  rules:
+  - host: test.ingress.com
+    http:
+      paths:
+      - path: /main
+        pathType: Prefix
+        backend:
+          service:
+            name: httpserver-service
+            port:
+              number: 9876
+      - path: /back
+        pathType: Prefix
+        backend:
+          service:
+            name: httpserver-service-back
+            port:
+              number: 9878
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: test-ingress
+spec:
+  selector:
+    k8s-app: traefik-ingress-lb
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
+  type: NodePort

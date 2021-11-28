@@ -14,17 +14,22 @@ import (
 	"github.com/golang/glog"
 )
 
+var global_config string
+
 func main() {
 	// some virtual init task
-	myInitial() // 2. will always be killed for 20s is over initialDelaySeconds=10, but used in /preStart
+	myInitial() // 1. will always be killed for 20s is over initialDelaySeconds=10, but used in /preStart
+
+	go getTooManyMemory()
 
 	//
 	// please run with cmd: ./bin/amd64/HTTPServer -logtostderr=true
 	//
 	flag.Parse()
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/healthz", healthzHandler)
+	http.HandleFunc("/healthz", healthzHandler) // 4. livenessProbe
 	http.HandleFunc("/preStop", preStopHandler)
+	http.HandleFunc("/getData", getDataHandler)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
@@ -74,25 +79,41 @@ func myInitial() {
 	// time.Sleep(time.Duration(20) * time.Second) // 2. will always be killed for 20s is over initialDelaySeconds=10
 	fmt.Println("init over", time.Now())
 
-	err := ioutil.WriteFile("/tmp/healthy", []byte("I can read now."), 0755)
+	// 5. get config from volume, file
+	bytes, err := ioutil.ReadFile("/data/config.ini")
+	if err != nil {
+		fmt.Printf("Unable to read file: %v\n", err)
+	}
+	global_config = string(bytes)
+	write_file("config: we get config " + global_config)
+	fmt.Println(global_config)
+
+	err = ioutil.WriteFile("/tmp/healthy", []byte("I can read now."), 0755)
 	if err != nil {
 		fmt.Printf("Unable to write file: %v\n", err)
 	}
 }
 
-// 3. pre stop, /data is a hostpath volume for check
+// 2. pre stop, /data is a hostpath volume for check
 func preStopHandler(w http.ResponseWriter, r *http.Request) {
-	f, err := os.OpenFile("/data/data.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	defer f.Close()
-	if err != nil {
-		fmt.Printf("file open error: %v\n", err)
-	}
-
-	if _, err = f.WriteString("preStop: good night! " + time.Now().String() + "\n"); err != nil {
-		fmt.Printf("file write error: %v\n", err)
-	}
+	write_file("preStop: good night! " + time.Now().String() + "\n")
 
 	w.WriteHeader(200)
 	io.WriteString(w, "preStop\n")
 	fmt.Println("preStop: good night!", time.Now()) // see log from 'kubectl logs'
+}
+
+// 3. it will OOM
+func getTooManyMemory() {
+	//time.Sleep(time.Duration(8) * time.Second) // it will oom quickly
+	time.Sleep(time.Duration(80) * time.Second)
+	var mem []int
+	for true {
+		mem = append(mem, 1)
+	}
+}
+
+func getDataHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	io.WriteString(w, "our config is: "+global_config+"\n")
 }
