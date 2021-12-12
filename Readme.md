@@ -18,3 +18,9 @@
 4. add config.ini from volume and get from /getData
 5. add service through ClusterIP(curl 10.104.5.137:9876/getData) and NodePort(curl localhost:30080/getData)
 6. ingress not success, try later
+
+## 1212 module 10 homework
+
+1. add /metrics access url
+2. add /count access url for delay count
+3. modify Deployment.yaml for prometheus Scrape
