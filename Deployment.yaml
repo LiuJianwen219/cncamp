@@ -5,12 +5,15 @@ metadata:
   labels:
     app: httpserver
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: httpserver
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: http-metrics
       labels:
         app: httpserver
     spec:
@@ -21,16 +24,18 @@ spec:
           type: Directory
       containers:
         - name: http-server
-          image: wxwd14388/httpserver:v1.0.0
+          image: wxwd14388/httpserver:v1.4.0
           ports:
-          - containerPort: 8080
+          - containerPort: 80
+            name: http-metrics
+            protocol: TCP
           volumeMounts:
           - mountPath: /data
             name: http-volume
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8080
+              port: 80
               httpHeaders:
               - name: user
                 value: cluster-livenessProbe
@@ -50,7 +55,7 @@ spec:
             preStop:
               httpGet:
                 path: /preStop
-                port: 8080
+                port: 80
           resources:
             requests:
               memory: "32Mi"
@@ -72,5 +77,5 @@ spec:
   ports:
     - protocol: TCP
       port: 9876
-      targetPort: 8080
+      targetPort: 80
       nodePort: 30080

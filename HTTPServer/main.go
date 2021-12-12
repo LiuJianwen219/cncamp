@@ -6,19 +6,23 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/LiuJianwen/cncamp/HTTPServer/metrics"
 	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var global_config string
 
+var sub_version = "v1.4"
+
 func main() {
-	// some virtual init task
-	myInitial() // 1. will always be killed for 20s is over initialDelaySeconds=10, but used in /preStart
+	myInitial()
 
 	go getTooManyMemory()
 
@@ -27,10 +31,13 @@ func main() {
 	//
 	flag.Parse()
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/healthz", healthzHandler) // 4. livenessProbe
+	http.HandleFunc("/healthz", healthzHandler)
 	http.HandleFunc("/preStop", preStopHandler)
 	http.HandleFunc("/getData", getDataHandler)
-	err := http.ListenAndServe(":8080", nil)
+
+	http.HandleFunc("/count", countHandler)
+	http.Handle("/metrics", promhttp.Handler())
+	err := http.ListenAndServe(":80", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,6 +52,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 	VERSION := os.Getenv("VERSION")
 	w.Header().Add("VERSION", VERSION)
+	w.Header().Add("sub_version", sub_version)
 	fmt.Println(VERSION)
 	glog.Infoln(w.Header())
 
@@ -52,7 +60,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln(ReadUserIP(r))
 	glog.Infoln(strings.Split(ReadUserIP(r), ":")[0])
 
-	io.WriteString(w, fmt.Sprintf("hello version is: %s\n", VERSION))
+	io.WriteString(w, fmt.Sprintf("hello version is: %s, sub_version is: %s\n", VERSION, sub_version))
 }
 
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +102,6 @@ func myInitial() {
 	}
 }
 
-// 2. pre stop, /data is a hostpath volume for check
 func preStopHandler(w http.ResponseWriter, r *http.Request) {
 	write_file("preStop: good night! " + time.Now().String() + "\n")
 
@@ -103,10 +110,9 @@ func preStopHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("preStop: good night!", time.Now()) // see log from 'kubectl logs'
 }
 
-// 3. it will OOM
 func getTooManyMemory() {
 	//time.Sleep(time.Duration(8) * time.Second) // it will oom quickly
-	time.Sleep(time.Duration(80) * time.Second)
+	time.Sleep(time.Duration(8000) * time.Second)
 	var mem []int
 	for true {
 		mem = append(mem, 1)
@@ -116,4 +122,28 @@ func getTooManyMemory() {
 func getDataHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	io.WriteString(w, "our config is: "+global_config+"\n")
+}
+
+func countHandler(w http.ResponseWriter, r *http.Request) {
+	glog.V(4).Info("count metrics")
+	timer := metrics.NewTimer()
+	defer timer.ObserveTotal()
+	user := r.URL.Query().Get("user")
+	delay := randInt(0, 2000)
+	time.Sleep(time.Millisecond * time.Duration(delay))
+	if user != "" {
+		io.WriteString(w, fmt.Sprintf("hello [%s]\n", user))
+	} else {
+		io.WriteString(w, "hello [stranger]\n")
+	}
+	io.WriteString(w, "======== Details of the http request header: ========\n")
+	for k, v := range r.Header {
+		io.WriteString(w, fmt.Sprintf("%s=%s\n", k, v))
+	}
+	glog.V(4).Infof("Respond in %d ms", delay)
+}
+
+func randInt(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return min + rand.Intn(max-min)
 }
