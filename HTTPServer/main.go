@@ -35,6 +35,7 @@ func main() {
 	http.HandleFunc("/preStop", preStopHandler)
 	http.HandleFunc("/getData", getDataHandler)
 
+	metrics.Register()
 	http.HandleFunc("/count", countHandler)
 	http.Handle("/metrics", promhttp.Handler())
 	err := http.ListenAndServe(":80", nil)

@@ -24,3 +24,5 @@
 1. add /metrics access url
 2. add /count access url for delay count
 3. modify Deployment.yaml for prometheus Scrape
+
+![grafana](./pic/Screenshot2012-12-12.png)
