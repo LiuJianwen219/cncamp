@@ -10,6 +10,7 @@
 8. docker login
 9. docker push wxwd14388/httpserver:v1.0.0 (sudo make push)
 
+
 ## 1128 module 8 homework
 
 1. create Deployment.yaml for normal deploy
@@ -19,6 +20,7 @@
 5. add service through ClusterIP(curl 10.104.5.137:9876/getData) and NodePort(curl localhost:30080/getData)
 6. ingress not success, try later
 
+
 ## 1212 module 10 homework
 
 1. add /metrics access url
@@ -26,3 +28,13 @@
 3. modify Deployment.yaml for prometheus Scrape
 
 ![grafana](./pic/Screenshot2012-12-12.png)
+
+
+
+## 12.26 module 11 homework
+
+1. install istio (wget, tar, ...)
+2. apply Deployment.yaml, create istio/istio-space.yaml, apply istio/nginx.yaml
+3. 7-level routing in istio/istio-space.yaml
+
+![grafana](./pic/Screenshot2021-12-26.png)

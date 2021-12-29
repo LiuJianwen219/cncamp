@@ -1,0 +1,52 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: simple
+spec:
+  gateways:
+    - simple
+  hosts:
+    - simple.cncamp.io
+  http:
+    - match:
+      - uri:
+          exact: "/http/count"
+      rewrite:
+        uri: "/hello"
+      route:
+        - destination:
+            host: httpserver-service.default.svc.cluster.local
+            port:
+              number: 9876
+    - match:
+      - uri:
+          prefix: "/nginx"
+      rewrite:
+        uri: "/"
+      route:
+        - destination:
+            host: nginx.default.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - port: 80
+      route:
+        - destination:
+            host: httpserver-service.default.svc.cluster.local
+            port:
+              number: 9876
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: simple
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - simple.cncamp.io
+      port:
+        name: http-simple
+        number: 80
+        protocol: HTTP

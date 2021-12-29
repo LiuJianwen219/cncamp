@@ -19,7 +19,7 @@ import (
 
 var global_config string
 
-var sub_version = "v1.4"
+var sub_version = "v1.5"
 
 func main() {
 	myInitial()
@@ -62,6 +62,12 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln(strings.Split(ReadUserIP(r), ":")[0])
 
 	io.WriteString(w, fmt.Sprintf("hello version is: %s, sub_version is: %s\n", VERSION, sub_version))
+
+	lowerCaseHeader := make(http.Header)
+	for k, v := range r.Header {
+		lowerCaseHeader[strings.ToLower(k)] = v
+	}
+	glog.Infoln("lower case headers: ", lowerCaseHeader)
 }
 
 func healthzHandler(w http.ResponseWriter, r *http.Request) {

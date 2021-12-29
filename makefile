@@ -1,4 +1,4 @@
-export tag=v1.4.0
+export tag=v1.5.0
 
 root:
 	export ROOT=github.com/LiuJianwen/cncamp

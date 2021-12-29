@@ -24,7 +24,7 @@ spec:
           type: Directory
       containers:
         - name: http-server
-          image: wxwd14388/httpserver:v1.4.0
+          image: wxwd14388/httpserver:v1.5.0
           ports:
           - containerPort: 80
             name: http-metrics
